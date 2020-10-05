@@ -7,7 +7,7 @@ load_dotenv(os.path.join(base_dir,'.env'),encoding='utf-8')
 class BaseConfig:
 
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI='mysql://root:@localhost:3306/blog'
+    SQLALCHEMY_DATABASE_URI='mysql+pymysql://root:root@localhost:3306/blog?charset=utf8'
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 
