@@ -5,15 +5,16 @@ from flask import request,jsonify,url_for
 from app.modles import User
 from app import db
 import re
+from app.api.auth import token_auth
 
 @api_bp.route('/users',methods=['GET'])
+@token_auth.login_required
 def get_users():
     """返回所有用户"""
     page = request.args.get('page', 1, type=int)
     per_page = min(request.args.get('per_page', 10, type=int), 100)
     data = User.to_collection_dict(User.query, page, per_page, 'api.get_users')
     return jsonify(data)
-
 
 
 @api_bp.route('/users',methods=['POST'])
@@ -28,6 +29,7 @@ def create_user():
     if 'username' not in data or not data.get('username', None):
         message['username'] = 'Please provide a valid username.'
 
+   
     pattern = '^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
     if 'email' not in data or not re.match(pattern, data.get('email', None)):
         message['email'] = 'Please provide a valid email address.'
@@ -54,11 +56,14 @@ def create_user():
 
 
 @api_bp.route('/users/<int:id>',methods=['DELETE'])
+@token_auth.login_required
 def delete_user(id):
     """删除一个用户"""
+
     pass
 
 @api_bp.route('/users/<int:id>',methods=['GET'])
+@token_auth.login_required
 def get_user(id):
     """根据id返回用户"""
 
@@ -66,12 +71,13 @@ def get_user(id):
    
 
 @api_bp.route('/users/<int:id>',methods=['PUT'])
+@token_auth.login_required
 def update_user(id):
     """修改一个用户"""
 
     user=User.query.get_or_404(id)
     data=request.get_json()
-
+    
     if not data:
         return bad_request('you have privode json')
 

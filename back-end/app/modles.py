@@ -2,7 +2,9 @@
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import url_for
-
+from datetime import datetime,timedelta
+import base64
+import os
 
 class PiginateAPIMinix(object):
     
@@ -36,6 +38,9 @@ class User(db.Model,PiginateAPIMinix):
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(64), unique=True)
     password_hash = db.Column(db.String(128))
+    token=db.Column(db.String(64),unique=True,index=True)
+    token_expiretion=db.Column(db.DateTime)
+
 
     def __repr__(self):
         return '<User.{}>'.format(self.usrname)
@@ -43,9 +48,11 @@ class User(db.Model,PiginateAPIMinix):
     def set_password(self,password):
         self.password_hash = generate_password_hash(password)
 
-    def check_password(self,password,password_hash):
 
-        return check_password_hash(password_hash, password)
+
+    def check_password(self,password):
+
+        return check_password_hash(self.password_hash,password)
     
     def form_dict(self,data,new_user=False):
         for field in ['username','email']:
@@ -67,6 +74,38 @@ class User(db.Model,PiginateAPIMinix):
             data['emial']=self.email
         
         return data
+
+    def get_token(self,expire_in=3600):
+
+        now=datetime.utcnow()
+        if self.token and self.token_expiretion>now+timedelta(seconds=60):
+            return self.token
+       
+        token=base64.b64encode(os.urandom(24)).decode('utf-8')
+
+        self.token=token
+        self.token_expiretion=now+timedelta(seconds=expire_in)
+        db.session.add(self)
+
+        return self.token
+
+    def revoke_token(self):
+        self.token_expiretion=datetime.utcnow()-timedelta(seconds=1)
+
+    @staticmethod
+    def check_token(token):
+        user=User.query.filter_by(token=token).first()
+        if user is None or user.token_expiretion<datetime.utcnow():
+            return None
+        return user
+
+        
+
+
+
+
+
+
 
 
 

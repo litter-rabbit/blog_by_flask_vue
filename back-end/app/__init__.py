@@ -8,8 +8,8 @@ from flask_migrate import Migrate
 import click
 
 
-db=SQLAlchemy()
 migrate = Migrate()
+db=SQLAlchemy()
 
 def create_app(configname=None):
 
@@ -42,7 +42,7 @@ def  register_command(app):
         db.create_all()
         click.echo('initialized success')
 
-
+    
 
 
 
